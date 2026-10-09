@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Seamless Localization Docs — Comjangs</title>
+<link rel="icon" href="../favicon.png">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../style.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
+</head><body>
+<div class="wrap">
+  <nav><a href="../"><img src="../img/profile.png" alt=""></a><a class="brand" href="./">SEAMLESS LOCALIZATION</a>
+    <div class="links"><a href="./">Overview</a><a href="mailto:comjangs@gmail.com">Support</a></div></nav>
+  <div class="docs">
+    <aside id="toc"></aside>
+    <article id="doc">Loading…</article>
+  </div>
+  <footer>© 2026 Comjangs · The same pages open in the Editor: Tools &gt; Seamless Localization &gt; Documentation.</footer>
+</div>
+<script>
+// 에디터 문서(Documentation/*.md)를 그대로 읽어 보여 준다 — 언어는 ?lang=ko
+const pages = [
+  ["index", "Overview", "개요"], ["quickstart", "Quick Start", "빠른 시작"], ["settings", "Project Settings", "프로젝트 설정"],
+  ["components", "Components", "컴포넌트"], ["text-converter", "Text Converter", "텍스트 변환기"], ["demo", "Demo", "데모"], ["glossary", "Glossary", "용어집"]
+];
+const q = new URLSearchParams(location.search);
+const page = pages.some(p => p[0] === q.get("page")) ? q.get("page") : "index";
+const ko = q.get("lang") === "ko";
+const link = (p, l) => `docs.html?page=${p}${l ? "&lang=ko" : ""}`;
+
+document.getElementById("toc").innerHTML =
+  pages.map(p => `<a class="${p[0] === page ? "on" : ""}" href="${link(p[0], ko)}">${ko ? p[2] : p[1]}</a>`).join("") +
+  `<div class="lang"><a href="${link(page, false)}">English</a><a href="${link(page, true)}">한국어</a></div>`;
+
+fetch(`docs/${ko ? "ko/" : ""}${page}.md`).then(r => r.ok ? r.text() : Promise.reject())
+  .then(md => {
+    const el = document.getElementById("doc");
+    el.innerHTML = marked.parse(md.replace(/<!--[\s\S]*?-->/g, ""));
+    // 문서 사이 링크(.md)를 이 뷰어 주소로 바꾼다
+    el.querySelectorAll("a[href$='.md'], a[href*='.md#']").forEach(a => {
+      const [file, hash] = a.getAttribute("href").split("#");
+      a.href = link(file.replace(/^.*\//, "").replace(".md", ""), ko) + (hash ? "#" + hash : "");
+    });
+    document.title = (el.querySelector("h1")?.textContent || "Docs") + " — Seamless Localization";
+  })
+  .catch(() => document.getElementById("doc").textContent = "Page not found.");
+</script>
+</body></html>
